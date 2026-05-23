@@ -7,11 +7,25 @@
   "engines": {
     "node": ">=22"
   },
+  "bin": {
+    "standup": "dist/bin.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/bin.js"
+  },
+  "dependencies": {
+    "smol-toml": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
