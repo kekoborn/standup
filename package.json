@@ -1,7 +1,7 @@
 {
   "name": "@kek/standup",
-  "version": "0.0.0",
-  "description": "A small CLI for running async standups.",
+  "version": "0.1.0",
+  "description": "A small CLI that turns recent git history into a markdown standup digest.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -17,12 +17,34 @@
     "README.md",
     "LICENSE"
   ],
+  "keywords": [
+    "standup",
+    "git",
+    "cli",
+    "digest",
+    "async",
+    "changelog",
+    "git-log",
+    "markdown"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kekoborn/standup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kekoborn/standup/issues"
+  },
+  "homepage": "https://github.com/kekoborn/standup#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/bin.js"
+    "start": "node dist/bin.js",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "smol-toml": "^1.6.1"
