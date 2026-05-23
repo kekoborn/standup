@@ -8,5 +8,13 @@ export {
   parseConfig,
   defaultConfigPath,
   resolveAuthor,
+  resolveWebhook,
+  webhookEnvVarName,
 } from "./config.js";
-export type { Config } from "./config.js";
+export type { Config, ResolvedWebhook, WebhookProvider } from "./config.js";
+export {
+  buildSlackPayload,
+  buildDiscordPayload,
+  postWebhook,
+} from "./webhook.js";
+export type { SlackPayload, DiscordPayload } from "./webhook.js";

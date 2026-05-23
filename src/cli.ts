@@ -1,19 +1,24 @@
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { loadConfig, resolveAuthor } from "./config.js";
+import { loadConfig, resolveAuthor, resolveWebhook } from "./config.js";
 import { parseDuration } from "./duration.js";
 import { readRepoLog, type RepoCommits } from "./git.js";
 import { formatDigest } from "./format.js";
 import { copyToClipboard } from "./clipboard.js";
+import { postWebhook } from "./webhook.js";
 
 const HELP = `standup — async standup digest from local git history
 
 Usage:
-  standup [--since <duration>] [--copy] [--config <path>]
+  standup [--since <duration>] [--copy | --post <name>] [--config <path>]
 
 Options:
   --since <duration>   Time window (e.g. 24h, 3d, 1w). Default: 24h.
   --copy               Copy markdown digest to clipboard instead of stdout.
+  --post <name>        Post digest to the named webhook (e.g. slack.main,
+                       discord.team). URL is read from config or the
+                       STANDUP_WEBHOOK_<NAME> env var — never accepted on
+                       the command line.
   --config <path>      Config file path. Default: ~/.config/standup/config.toml.
   -h, --help           Show this help.
 `;
@@ -37,6 +42,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
       options: {
         since: { type: "string", default: "24h" },
         copy: { type: "boolean", default: false },
+        post: { type: "string" },
         config: { type: "string" },
         help: { type: "boolean", short: "h", default: false },
       },
@@ -53,6 +59,15 @@ export async function run(opts: RunOptions): Promise<RunResult> {
 
   if (parsed.values.help) {
     return { exitCode: 0, stdout: HELP, stderr: "" };
+  }
+
+  const postName = parsed.values.post as string | undefined;
+  if (postName !== undefined && parsed.values.copy) {
+    return {
+      exitCode: 2,
+      stdout: "",
+      stderr: "--copy and --post are mutually exclusive.\n",
+    };
   }
 
   const sinceRaw = parsed.values.since as string;
@@ -87,6 +102,25 @@ export async function run(opts: RunOptions): Promise<RunResult> {
       exitCode: 0,
       stdout: "",
       stderr: `copied ${md.length} chars to clipboard.\n`,
+    };
+  }
+
+  if (postName !== undefined) {
+    let webhook;
+    try {
+      webhook = resolveWebhook(cfg, postName, opts.env ?? process.env);
+    } catch (err) {
+      return { exitCode: 1, stdout: "", stderr: `${(err as Error).message}\n` };
+    }
+    try {
+      await postWebhook(webhook, md);
+    } catch (err) {
+      return { exitCode: 1, stdout: "", stderr: `${(err as Error).message}\n` };
+    }
+    return {
+      exitCode: 0,
+      stdout: "",
+      stderr: `posted ${md.length} chars to ${webhook.provider} webhook "${webhook.name}" (from ${webhook.source}).\n`,
     };
   }
 
